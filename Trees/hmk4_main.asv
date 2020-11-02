@@ -1,0 +1,99 @@
+% Problem 1, Homework 4
+% Haoran Lin, CSE 417, 2019.
+% Digital Recognition 
+% Bagging, Random Forest and AdaBoost
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Prepare Workspace and Initialize
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear; close all; clc;
+
+% Getting Training Data and Test Data
+data_train = table2array(readtable('zip_train.csv'));
+data_test = table2array(readtable('zip_test.csv'));
+y_tr = data_train(:,1);
+y_te = data_test(:,1);
+
+% Problem 1 : Digit one vs Digit Three
+data_train_p1 = data_train((y_tr == 1 | y_tr == 3),:);
+X_tr_p1 = data_train_p1(:,2:end);
+y_tr_p1 = data_train_p1(:,1);
+
+data_test_p1 = data_test((y_te == 1 | y_te == 3),:);
+X_te_p1 = data_test_p1(:,2:end);
+y_te_p1 = data_test_p1(:,1);
+
+% Problem 2 : Digit three vs Digit Five
+data_train_p2 = data_train((y_tr == 3 | y_tr == 5),:);
+X_tr_p2 = data_train_p2(:,2:end);
+y_tr_p2 = data_train_p2(:,1);
+
+data_test_p2 = data_test((y_te == 3 | y_te == 5),:);
+X_te_p2 = data_test_p2(:,2:end);
+y_te_p2 = data_test_p2(:,1);
+
+% Bagging, Random Forest, AdaBoost Parameters
+numBags = 200;
+numTrees = 200;
+m1 = floor(size(X_tr_p1, 2)/3);
+m2 = floor(size(X_tr_p2, 2)/3);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Digital Recognition Problem 1 : Digit one vs Digit Three
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+fprintf('Start working on Problem 1 ( 1 vs 3 ):\n');
+
+ct_1 = fitctree(X_tr_p1, y_tr_p1, 'CrossVal', 'on');
+fprintf('The cross-validation error of decision trees is %.4f\n', ...
+         ct_1.kfoldLoss);
+t_1 = fitctree(X_tr_p1, y_tr_p1);
+fprintf('The test error of decision trees is %.4f\n\n', ...
+         sum(predict(t_1,X_te_p1) ~= y_te_p1)/length(y_te_p1));
+     
+%% bagged trees
+[bag_oob_err_p1, bag_test_err_p1] = BaggedTrees(X_tr_p1, y_tr_p1, ...
+                                                X_te_p1, y_te_p1, numBags);
+oob_ave = mean(bag_oob_err_p1(end-20:end));                                            
+fprintf('The OOB  error of the bagged trees is %.4f\n', bag_oob_err_p1(end));
+fprintf('The test error of the bagged trees is %.4f\n\n', bag_test_err_p1);
+
+%% random forest     
+[rf_oob_err_p1, rf_test_err_p1] = RandomForest(X_tr_p1, y_tr_p1, ...
+                                            X_te_p1, y_te_p1, numBags, m1);
+fprintf('The OOB  error of the random forest is %.4f\n', rf_oob_err_p1(end));
+fprintf('The test error of the random forest is %.4f\n', rf_test_err_p1);     
+
+%% adaboost
+[ad_train_err_p1, ad_test_err_p1] = AdaBoost(X_tr_p1, y_tr_p1, ...
+                                             X_te_p1, y_te_p1, numTrees);
+fprintf('\n'); 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Digital Recognition Problem 2 : Digit three vs Digit Five
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                      
+fprintf('Start working on Problem 2 ( 3 vs 5 ):\n');     
+
+ct_2 = fitctree(X_tr_p2, y_tr_p2, 'CrossVal', 'on');
+fprintf('The cross-validation error of decision trees is %.4f\n', ...
+         ct_2.kfoldLoss);
+t_2 = fitctree(X_tr_p2, y_tr_p2);
+fprintf('The test error of decision trees is %.4f\n\n', ...
+         sum(predict(t_2,X_te_p2) ~= y_te_p2)/length(y_te_p2));
+     
+%% bagged trees
+[bag_oob_err_p2, bag_test_err_p2] = BaggedTrees(X_tr_p2, y_tr_p2, ...
+                                                X_te_p2, y_te_p2, numBags);
+fprintf('The OOB  error of the bagged trees is %.4f\n', bag_oob_err_p2(end));
+fprintf('The test error of the bagged trees is %.4f\n\n', bag_test_err_p2);
+
+%% random forest                                   
+[rf_oob_err_p2, rf_test_err_p2] = RandomForest(X_tr_p2, y_tr_p2, ...
+                                            X_te_p2, y_te_p2, numBags, m2);
+fprintf('The OOB  error of the random forest is %.4f\n', rf_oob_err_p2(end));
+fprintf('The test error of the random forest is %.4f\n', rf_test_err_p2);
+%% adaboost
+[ad_train_err_p2, ad_test_err_p2] = AdaBoost(X_tr_p2, y_tr_p2, ...
+                                             X_te_p2, y_te_p2, numTrees);
+fprintf('\n');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
