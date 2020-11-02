@@ -1,5 +1,5 @@
 % Problem 1, Homework 4
-% Jiun Yoo, CSE 417, 2019.
+% Haoran Lin & Jiun Yoo, CSE 417, 2019.
 % Digital Recognition 
 % Bagging, Random Forest and AdaBoost
 
